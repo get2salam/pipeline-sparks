@@ -7,13 +7,13 @@
     <meta name="description" content="Track lightweight opportunities before they either compound or cool off." />
     <link rel="stylesheet" href="./styles/app.css" />
   </head>
-  <body style="--primary:#ef4444;--secondary:#fca5a5;--panel:#190b0b;--edge:#572121;--glow:rgba(239, 68, 68, 0.22)">
+  <body style="--primary:#fb7185;--secondary:#facc15;--panel:#191012;--edge:#6c3d31;--glow:rgba(251, 113, 133, 0.22)">
     <div class="shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Local-first micro app</p>
+          <p class="eyebrow">Opportunity workspace</p>
           <h1>Pipeline Sparks</h1>
-          <p class="lede">Track lightweight opportunities before they either compound or cool off.</p>
+          <p class="lede">Keep opportunity sparks alive with better source notes, next touches, win chance, and follow-up dates.</p>
         </div>
         <div class="actions">
           <button class="btn" data-action="import">Import</button>
@@ -25,19 +25,20 @@
 
       <section class="hero card">
         <div>
-          <p class="eyebrow">Opportunities board</p>
+          <p class="eyebrow">Pipeline sparks board</p>
           <h2 data-role="board-title"></h2>
           <p data-role="board-subtitle"></p>
         </div>
-        <p class="accent">Some opportunities need a small spark before they become real conversations.</p>
+        <p class="accent">Early opportunities need source, next touch, and win chance visible before they cool off or get forgotten.</p>
       </section>
 
       <section class="stats" data-role="stats"></section>
+      <section class="insights" data-role="insights"></section>
 
       <section class="controls card">
         <label>
           <span>Search</span>
-          <input type="search" data-field="search" placeholder="Search opportunities..." />
+          <input type="search" data-field="search" placeholder="Search opportunities, notes, and next steps..." />
         </label>
         <label>
           <span>Opportunity type</span>
@@ -55,13 +56,18 @@
           <div class="panel-head">
             <div>
               <strong>Opportunities</strong>
-              <p>Sorted by signal minus friction.</p>
+              <p>Track lightweight opportunities before they either compound or cool off.</p>
             </div>
             <span class="chip" data-role="count"></span>
           </div>
           <div class="list" data-role="list"></div>
         </article>
         <article class="card editor-panel" data-role="editor"></article>
+      </section>
+
+      <section class="secondary">
+        <article class="card secondary-panel" data-role="secondary-primary"></article>
+        <article class="card secondary-panel" data-role="secondary-secondary"></article>
       </section>
     </div>
     <script type="module" src="./js/main.js"></script>

@@ -4,45 +4,37 @@ Track lightweight opportunities before they either compound or cool off.
 
 ![Pipeline Sparks preview](docs/preview.svg)
 
-Pipeline Sparks is a small local-first planning tool for solo builders, operators, and creative teams who want a cleaner way to manage opportunities. Add items, score the signal, track the friction, and keep the strongest opportunities visible without needing a backend or build step.
+Pipeline Sparks is a local-first workspace for founders, operators, and solo builders who want a cleaner way to manage opportunities. It keeps win chance, source, next touch, and review timing visible so the right things move forward with less drift.
 
-## Features
+## What it does
 
-- Local-first persistence with `localStorage`
-- Search and filter controls
-- Ranked list sorted by signal minus friction
-- Inline editor for title, notes, type, status, score, and effort
-- Import/export JSON backups
-- Re-seed action for resetting the sample board
-- Keyboard shortcuts: `N` for new, `/` for search
-- No build tooling, just open in a browser
+- ranks opportunities by leverage, win chance, timing, and friction
+- tracks **source**, **next touch**, **follow-up date**, and **win chance** for each opportunity
+- highlights the best current bet, the next review slot, and the strongest signal on the board
+- renders a dedicated queue plus a category mix snapshot beneath the main board
+- saves locally in the browser with JSON import/export backups
+- quick action: **Qualify now**
+- quick action: **Raise win chance**
+- quick action: **Mark won**
+
+## Why it feels different
+
+Pipeline Sparks is not just a generic list. It is shaped around the real workflow behind opportunities, so the board helps you decide what matters next instead of simply storing records.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/<you>/pipeline-sparks.git
+git clone https://github.com/get2salam/pipeline-sparks.git
 cd pipeline-sparks
 python -m http.server 8000
 ```
 
 Then open <http://localhost:8000>.
 
-## Data shape
+## Keyboard shortcuts
 
-```json
-{
-  "boardTitle": "Opportunity sparks",
-  "items": [
-    {
-      "title": "Past client reactivation",
-      "category": "Revive",
-      "state": "Nudged",
-      "score": 8,
-      "effort": 2
-    }
-  ]
-}
-```
+- `N` creates a new opportunity
+- `/` focuses the search box
 
 ## Privacy
 
