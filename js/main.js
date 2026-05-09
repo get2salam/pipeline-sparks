@@ -222,7 +222,16 @@ function escapeHtml(value) {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validDate(value) {
+  if (typeof value !== 'string' || !ISO_DATE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(parsed.getTime());
 }
 
 function clamp(value, min, max) {
@@ -257,7 +266,7 @@ function normalize(item = {}) {
     metric: clamp(item.metric ?? SPEC.metric.default ?? 6, SPEC.metric.min, SPEC.metric.max),
     textOne: item.textOne || SPEC.textOne.default,
     textTwo: item.textTwo || SPEC.textTwo.default,
-    date: item.date || todayISO(3),
+    date: validDate(item.date) ? item.date : todayISO(3),
   };
 }
 
@@ -481,7 +490,7 @@ function renderList(items) {
   }
 
   refs.list.innerHTML = items.map((item) => `
-    <button class="item ${item.id === state.ui.selectedId ? 'is-selected' : ''}" type="button" data-id="${item.id}">
+    <button class="item ${item.id === state.ui.selectedId ? 'is-selected' : ''}" type="button" data-id="${escapeHtml(item.id)}">
       <div class="item-top">
         <strong>${escapeHtml(item.title)}</strong>
         <span class="score">${priority(item)}</span>
@@ -551,7 +560,7 @@ function renderEditor(item) {
       <div class="field-grid">
         <label class="field">
           <span>${SPEC.date.label}</span>
-          <input type="date" data-item-field="date" value="${item.date}" />
+          <input type="date" data-item-field="date" value="${escapeHtml(item.date)}" />
         </label>
         <label class="field range-wrap">
           <span>${SPEC.metric.label}</span>
