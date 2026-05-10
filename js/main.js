@@ -172,6 +172,9 @@ const refs = {
 const toastHost = (() => {
   const host = document.createElement('div');
   host.className = 'toast-host';
+  host.setAttribute('role', 'status');
+  host.setAttribute('aria-live', 'polite');
+  host.setAttribute('aria-atomic', 'true');
   document.body.appendChild(host);
   return host;
 })();
@@ -199,21 +202,30 @@ function todayISO(offset = 0) {
   return date.toISOString().slice(0, 10);
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validDate(value) {
+  if (typeof value !== 'string' || !ISO_DATE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(parsed.getTime());
+}
+
 function daysFromToday(value) {
-  if (!value) return 999;
+  if (!validDate(value)) return 999;
   const today = new Date(`${todayISO()}T00:00:00`);
   const target = new Date(`${value}T00:00:00`);
   return Math.round((target - today) / 86400000);
 }
 
 function bumpDate(value, days) {
-  const date = new Date(`${value || todayISO()}T00:00:00`);
+  const base = validDate(value) ? value : todayISO();
+  const date = new Date(`${base}T00:00:00`);
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 }
 
 function formatDate(value) {
-  if (!value) return 'No date';
+  if (!validDate(value)) return 'No date';
   return new Date(`${value}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 }
 
@@ -224,14 +236,6 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
-}
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function validDate(value) {
-  if (typeof value !== 'string' || !ISO_DATE.test(value)) return false;
-  const parsed = new Date(`${value}T00:00:00`);
-  return !Number.isNaN(parsed.getTime());
 }
 
 function clamp(value, min, max) {
@@ -581,7 +585,7 @@ function renderEditor(item) {
         </label>
         <label class="field range-wrap">
           <span>Priority</span>
-          <input type="range" min="0" max="100" value="${Math.min(100, priority(item))}" disabled />
+          <input type="range" min="0" max="100" value="${clamp(priority(item), 0, 100)}" disabled />
           <output>${priority(item)}</output>
         </label>
       </div>
