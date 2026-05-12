@@ -289,11 +289,26 @@ function seedState() {
   };
 }
 
+function safeParseSnapshot(raw) {
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Backup must be a JSON object.');
+  }
+  if (parsed.items !== undefined && !Array.isArray(parsed.items)) {
+    throw new Error('Backup items must be an array.');
+  }
+  const { ui } = parsed;
+  if (ui !== undefined && (ui === null || typeof ui !== 'object' || Array.isArray(ui))) {
+    throw new Error('Backup ui must be an object.');
+  }
+  return parsed;
+}
+
 function hydrate() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState();
-    const parsed = JSON.parse(raw);
+    const parsed = safeParseSnapshot(raw);
     return {
       ...seedState(),
       ...parsed,
@@ -385,7 +400,7 @@ function exportState() {
 
 async function importState(file) {
   const raw = await file.text();
-  const parsed = JSON.parse(raw);
+  const parsed = safeParseSnapshot(raw);
   commit({
     ...seedState(),
     ...parsed,
@@ -699,7 +714,8 @@ document.addEventListener('change', async (event) => {
       await importState(file);
     } catch (error) {
       console.error(error);
-      showToast('Import failed.');
+      const detail = error instanceof SyntaxError ? 'invalid JSON' : error.message;
+      showToast(`Import failed: ${detail}`);
     } finally {
       event.target.value = '';
     }
