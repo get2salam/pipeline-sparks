@@ -729,6 +729,9 @@ document.addEventListener('change', async (event) => {
 
 document.addEventListener('keydown', (event) => {
   if (event.target.closest('input, textarea, select')) return;
+  // Let the browser keep ownership of modifier combos (Cmd+N, Ctrl+/, etc.)
+  // and ignore auto-repeat so holding a key does not spam actions.
+  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
   if (event.key.toLowerCase() === 'n') {
     event.preventDefault();
     addItem();

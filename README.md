@@ -33,6 +33,8 @@ Then open <http://localhost:8000>.
 
 ## Keyboard shortcuts
 
+Shortcuts only fire when no input is focused and no modifier keys (Cmd, Ctrl, Alt) are held, so browser shortcuts like Cmd+N keep working as expected.
+
 - `N` creates a new opportunity
 - `/` focuses the search box
 
