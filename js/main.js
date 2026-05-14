@@ -299,6 +299,11 @@ function safeParseSnapshot(raw) {
   if (parsed.items !== undefined && !Array.isArray(parsed.items)) {
     throw new Error('Backup items must be an array.');
   }
+  for (const field of ['boardTitle', 'boardSubtitle']) {
+    if (parsed[field] !== undefined && typeof parsed[field] !== 'string') {
+      throw new Error(`Backup ${field} must be a string.`);
+    }
+  }
   const { ui } = parsed;
   if (ui !== undefined && (ui === null || typeof ui !== 'object' || Array.isArray(ui))) {
     throw new Error('Backup ui must be an object.');
@@ -395,8 +400,14 @@ function exportState() {
   const link = document.createElement('a');
   link.href = url;
   link.download = `${SPEC.slug}.json`;
+  link.rel = 'noopener';
+  // Firefox and Safari require the anchor to be in the DOM for programmatic
+  // downloads, and revoking the object URL synchronously can cancel the
+  // transfer before the browser has read it.
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
   showToast('Downloaded backup.');
 }
 
