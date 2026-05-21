@@ -260,19 +260,22 @@ function toneForDate(item) {
   return 'success';
 }
 
-function normalize(item = {}) {
+function normalize(item) {
+  // Default parameters only fire for `undefined`, so null/primitives from a
+  // malformed snapshot would crash on property access. Coerce defensively.
+  const source = item && typeof item === 'object' && !Array.isArray(item) ? item : {};
   return {
-    id: item.id || uid(),
-    title: item.title || `New ${SPEC.itemLabel}`,
-    note: item.note || SPEC.defaults.note,
-    category: SPEC.categories.includes(item.category) ? item.category : SPEC.categories[0],
-    state: SPEC.states.includes(item.state) ? item.state : SPEC.states[0],
-    score: clamp(item.score ?? 7, 1, 10),
-    effort: clamp(item.effort ?? 3, 1, 10),
-    metric: clamp(item.metric ?? SPEC.metric.default ?? 6, SPEC.metric.min, SPEC.metric.max),
-    textOne: item.textOne || SPEC.textOne.default,
-    textTwo: item.textTwo || SPEC.textTwo.default,
-    date: validDate(item.date) ? item.date : todayISO(3),
+    id: source.id || uid(),
+    title: source.title || `New ${SPEC.itemLabel}`,
+    note: source.note || SPEC.defaults.note,
+    category: SPEC.categories.includes(source.category) ? source.category : SPEC.categories[0],
+    state: SPEC.states.includes(source.state) ? source.state : SPEC.states[0],
+    score: clamp(source.score ?? 7, 1, 10),
+    effort: clamp(source.effort ?? 3, 1, 10),
+    metric: clamp(source.metric ?? SPEC.metric.default ?? 6, SPEC.metric.min, SPEC.metric.max),
+    textOne: source.textOne || SPEC.textOne.default,
+    textTwo: source.textTwo || SPEC.textTwo.default,
+    date: validDate(source.date) ? source.date : todayISO(3),
   };
 }
 
@@ -296,8 +299,15 @@ function safeParseSnapshot(raw) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Backup must be a JSON object.');
   }
-  if (parsed.items !== undefined && !Array.isArray(parsed.items)) {
-    throw new Error('Backup items must be an array.');
+  if (parsed.items !== undefined) {
+    if (!Array.isArray(parsed.items)) {
+      throw new Error('Backup items must be an array.');
+    }
+    parsed.items.forEach((entry, index) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        throw new Error(`Backup item at position ${index} must be an object.`);
+      }
+    });
   }
   for (const field of ['boardTitle', 'boardSubtitle']) {
     if (parsed[field] !== undefined && typeof parsed[field] !== 'string') {
