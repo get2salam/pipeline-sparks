@@ -1,3 +1,5 @@
+import { planNextActions } from './agent-planner.js';
+
 const SPEC = {
   "slug": "pipeline-sparks",
   "title": "Pipeline Sparks",
@@ -666,6 +668,7 @@ function renderPanels() {
 
   const byCategory = SPEC.categories.map((entry) => ({ entry, count: state.items.filter((item) => item.category === entry).length }));
   const strongest = state.items.length ? [...state.items].sort((a, b) => b.metric - a.metric)[0].title : '—';
+  const agentSuggestions = planNextActions(state.items, daysFromToday).slice(0, 2);
   refs.secondarySecondary.innerHTML = `
     <div class="secondary-head">
       <div>
@@ -677,6 +680,14 @@ function renderPanels() {
     <ul class="metric-list">
       ${byCategory.map(({ entry, count }) => `<li><span>${entry}</span><strong>${count}</strong></li>`).join('')}
       <li><span>Strongest ${SPEC.metric.label.toLowerCase()}</span><strong>${escapeHtml(strongest)}</strong></li>
+    </ul>
+    <p class="eyebrow" style="margin: 14px 0 8px;">Agent plan</p>
+    <ul class="metric-list">
+      ${agentSuggestions.length
+        ? agentSuggestions.map(({ title, label, confidence }) =>
+            `<li><span>${escapeHtml(title)} · ${escapeHtml(label)}</span><strong>${confidence}%</strong></li>`
+          ).join('')
+        : '<li><span>No high-confidence actions needed right now.</span><strong>—</strong></li>'}
     </ul>
   `;
 }
