@@ -104,4 +104,27 @@ console.assert(test9.valid, 'Should be valid');
 console.assert(test9.actionResults.length === 2, 'Should validate 2 actions');
 console.log('   ✓ Passed\n');
 
+// Test 10: validateAgentAction guards against null/undefined input
+console.log('10. validateAgentAction handles null input without throwing');
+const test10a = validateAgentAction(null);
+const test10b = validateAgentAction(undefined);
+console.assert(!test10a.valid && test10a.issues.length > 0, 'null action should be invalid');
+console.assert(!test10b.valid && test10b.issues.length > 0, 'undefined action should be invalid');
+console.log('   ✓ Passed\n');
+
+// Test 11: auditAgentExecution rejects non-array actions safely
+console.log('11. auditAgentExecution rejects non-array actions');
+const test11 = auditAgentExecution(null);
+console.assert(!test11.valid, 'Should be invalid');
+console.assert(test11.batchIssues.some((i) => i.includes('array')), 'Should flag non-array input');
+console.log('   ✓ Passed\n');
+
+// Test 12: auditAgentExecution skips null entries without throwing
+console.log('12. auditAgentExecution tolerates null action entries');
+const test12 = auditAgentExecution([null, validAction]);
+console.assert(test12.actionResults.length === 2, 'Should record a result for each entry');
+console.assert(test12.actionResults[0].valid === false, 'null entry should be marked invalid');
+console.assert(test12.actionResults[1].valid === true, 'Valid entry should still pass');
+console.log('   ✓ Passed\n');
+
 console.log('✅ All tests passed');

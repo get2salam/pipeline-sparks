@@ -49,6 +49,10 @@ export const AGENT_AUDIT_CHECKLIST = {
  * @returns {Object} {valid: boolean, issues: string[]}
  */
 export function validateAgentAction(action, item = null) {
+  if (action == null || typeof action !== 'object') {
+    return { valid: false, issues: ['[action] Action is missing or not an object'] };
+  }
+
   const issues = [];
 
   for (const [key, rule] of Object.entries(AGENT_AUDIT_CHECKLIST)) {
@@ -70,38 +74,46 @@ export function validateAgentAction(action, item = null) {
  * @returns {Object} {valid: boolean, actionResults: Object[], batchIssues: string[]}
  */
 export function auditAgentExecution(actions, items = []) {
-  const itemMap = new Map(items.map(i => [i.id, i]));
+  if (!Array.isArray(actions)) {
+    return { valid: false, actionResults: [], batchIssues: ['actions must be an array'] };
+  }
+  const safeItems = Array.isArray(items) ? items.filter((i) => i && i.id != null) : [];
+  const itemMap = new Map(safeItems.map((i) => [i.id, i]));
   const actionResults = [];
   const batchIssues = [];
 
   // Check for duplicates
   const actionIds = new Set();
-  const duplicates = actions.filter(a => {
+  for (const a of actions) {
+    if (a == null || typeof a !== 'object') continue;
     const key = `${a.itemId}-${a.actionId}`;
     if (actionIds.has(key)) {
       batchIssues.push(`Duplicate action: ${a.actionId} on item ${a.itemId}`);
-      return true;
+    } else {
+      actionIds.add(key);
     }
-    actionIds.add(key);
-    return false;
-  });
+  }
 
   // Validate each action
   for (const action of actions) {
-    const item = itemMap.get(action.itemId);
+    const item = action && typeof action === 'object' ? itemMap.get(action.itemId) : null;
     const result = validateAgentAction(action, item);
     actionResults.push({
       action,
       ...result,
     });
     if (!result.valid) {
-      batchIssues.push(`Item "${action.title}": ${result.issues.join(', ')}`);
+      const label = action && action.title ? action.title : '(unknown)';
+      batchIssues.push(`Item "${label}": ${result.issues.join(', ')}`);
     }
   }
 
-  // Check confidence distribution
-  if (actions.length > 0) {
-    const avgConfidence = actions.reduce((sum, a) => sum + a.confidence, 0) / actions.length;
+  // Check confidence distribution (only over numeric confidences)
+  const numericConfidences = actions
+    .filter((a) => a && typeof a.confidence === 'number')
+    .map((a) => a.confidence);
+  if (numericConfidences.length > 0) {
+    const avgConfidence = numericConfidences.reduce((sum, c) => sum + c, 0) / numericConfidences.length;
     if (avgConfidence < 30) {
       batchIssues.push(`Low average confidence: ${Math.round(avgConfidence)}% — agent may be uncertain`);
     }
