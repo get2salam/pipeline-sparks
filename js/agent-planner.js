@@ -39,10 +39,13 @@ const RUBRIC = [
  * @returns {Array<{itemId, title, actionId, label, reason, confidence}>}
  */
 export function planNextActions(items, daysFromToday) {
+  if (!Array.isArray(items) || typeof daysFromToday !== 'function') return [];
   const out = [];
   for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
     if (GUARDRAILS.blockedStates.has(item.state)) continue;
     const daysDue = daysFromToday(item.date);
+    if (typeof daysDue !== 'number' || !Number.isFinite(daysDue)) continue;
     for (const rule of RUBRIC) {
       if (!rule.matches(item, daysDue)) continue;
       const conf = rule.confidence(item, daysDue);

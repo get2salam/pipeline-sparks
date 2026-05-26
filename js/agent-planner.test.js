@@ -96,4 +96,39 @@ const t9 = planNextActions(
 });
 console.log('   ✓ Passed\n');
 
+// Test 10: non-array items returns [] without throwing
+console.log('10. Non-array items returns []');
+console.assert(planNextActions(null, fixed(0)).length === 0, 'null items should return []');
+console.assert(planNextActions(undefined, fixed(0)).length === 0, 'undefined items should return []');
+console.assert(planNextActions({}, fixed(0)).length === 0, 'object items should return []');
+console.log('   ✓ Passed\n');
+
+// Test 11: non-function daysFromToday returns [] without throwing
+console.log('11. Non-function daysFromToday returns []');
+console.assert(planNextActions([], null).length === 0, 'null daysFromToday should return []');
+console.assert(
+  planNextActions([{ id: '1', title: 'x', state: 'Seen', metric: 8, score: 8, date: '' }], 'nope').length === 0,
+  'string daysFromToday should return []',
+);
+console.log('   ✓ Passed\n');
+
+// Test 12: null/non-object items are skipped silently
+console.log('12. Null and non-object items are skipped');
+const t12 = planNextActions(
+  [null, undefined, 42, { id: '1', title: 'Real', state: 'Seen', metric: 8, score: 8, date: '' }],
+  fixed(5),
+);
+console.assert(t12.length === 1, `Should only plan for the one real item, got ${t12.length}`);
+console.assert(t12[0].itemId === '1', 'Survivor should be the real item');
+console.log('   ✓ Passed\n');
+
+// Test 13: non-finite daysFromToday output skips the item
+console.log('13. Non-finite daysFromToday output skips the item');
+const t13 = planNextActions(
+  [{ id: '1', title: 'NaN date', state: 'Seen', metric: 8, score: 8, date: 'bogus' }],
+  () => NaN,
+);
+console.assert(t13.length === 0, 'NaN daysDue should produce no suggestions');
+console.log('   ✓ Passed\n');
+
 console.log('✅ All tests passed');
