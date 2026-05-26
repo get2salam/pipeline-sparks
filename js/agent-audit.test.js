@@ -127,4 +127,16 @@ console.assert(test12.actionResults[0].valid === false, 'null entry should be ma
 console.assert(test12.actionResults[1].valid === true, 'Valid entry should still pass');
 console.log('   ✓ Passed\n');
 
+// Test 13: confidence must be a real number — coerced values are rejected
+console.log('13. Confidence rejects non-numeric values (null, boolean, string)');
+for (const bad of [null, true, false, '50', NaN, Infinity]) {
+  const result = validateAgentAction({ ...validAction, confidence: bad });
+  console.assert(!result.valid, `confidence=${String(bad)} should be invalid`);
+  console.assert(
+    result.issues.some((i) => i.includes('confidence')),
+    `confidence=${String(bad)} should flag confidence issue`,
+  );
+}
+console.log('   ✓ Passed\n');
+
 console.log('✅ All tests passed');

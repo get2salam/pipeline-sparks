@@ -11,8 +11,12 @@ export const AGENT_AUDIT_CHECKLIST = {
   },
   // Confidence validation
   confidence: {
-    isValid: (action) => action.confidence >= 0 && action.confidence <= 100,
-    reason: 'Confidence must be 0-100%',
+    isValid: (action) =>
+      typeof action.confidence === 'number' &&
+      Number.isFinite(action.confidence) &&
+      action.confidence >= 0 &&
+      action.confidence <= 100,
+    reason: 'Confidence must be a finite number in the range 0-100',
   },
   // Item reference validation
   itemRef: {
