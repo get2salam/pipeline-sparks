@@ -1,4 +1,9 @@
-import { AGENT_AUDIT_CHECKLIST, validateAgentAction, auditAgentExecution } from './agent-audit.js';
+import {
+  AGENT_AUDIT_CHECKLIST,
+  validateAgentAction,
+  auditAgentExecution,
+  summarizeAuditResult,
+} from './agent-audit.js';
 
 // Test data
 const validAction = {
@@ -137,6 +142,36 @@ for (const bad of [null, true, false, '50', NaN, Infinity]) {
     `confidence=${String(bad)} should flag confidence issue`,
   );
 }
+console.log('   ✓ Passed\n');
+
+// Test 14: summarizeAuditResult formats a passing batch
+console.log('14. summarizeAuditResult formats a passing batch');
+const test14 = summarizeAuditResult(
+  auditAgentExecution([{ ...validAction, itemId: 'opp-1' }]),
+);
+console.assert(test14.startsWith('Audit: PASS'), 'Should start with PASS line');
+console.assert(test14.includes('1/1 actions valid'), 'Should report 1/1 valid');
+console.log('   ✓ Passed\n');
+
+// Test 15: summarizeAuditResult reports failure counts and batch issues
+console.log('15. summarizeAuditResult reports failures and batch issues');
+const test15 = summarizeAuditResult(
+  auditAgentExecution([
+    { ...validAction, itemId: 'opp-1' },
+    { ...validAction, itemId: 'opp-1' }, // duplicate to force a batch issue
+    { ...validAction, itemId: null }, // missing itemRef
+  ]),
+);
+console.assert(test15.startsWith('Audit: FAIL'), 'Should start with FAIL line');
+console.assert(test15.includes('action(s) failed validation'), 'Should report failed actions');
+console.assert(test15.includes('Duplicate'), 'Should surface duplicate batch issue');
+console.log('   ✓ Passed\n');
+
+// Test 16: summarizeAuditResult handles null/non-object input safely
+console.log('16. summarizeAuditResult handles null input');
+console.assert(summarizeAuditResult(null) === 'No audit result available', 'null should be handled');
+console.assert(summarizeAuditResult(undefined) === 'No audit result available', 'undefined should be handled');
+console.assert(summarizeAuditResult(42) === 'No audit result available', 'non-object should be handled');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

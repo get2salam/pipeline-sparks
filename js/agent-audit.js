@@ -129,3 +129,23 @@ export function auditAgentExecution(actions, items = []) {
     batchIssues,
   };
 }
+
+/**
+ * Format an audit result as a printable summary suitable for console or UI display.
+ * @param {Object} result - Output from auditAgentExecution
+ * @returns {string} Multi-line summary
+ */
+export function summarizeAuditResult(result) {
+  if (result == null || typeof result !== 'object') {
+    return 'No audit result available';
+  }
+  const actionResults = Array.isArray(result.actionResults) ? result.actionResults : [];
+  const batchIssues = Array.isArray(result.batchIssues) ? result.batchIssues : [];
+  const total = actionResults.length;
+  const passed = actionResults.filter((r) => r && r.valid).length;
+  const failed = total - passed;
+  const lines = [`Audit: ${result.valid ? 'PASS' : 'FAIL'} — ${passed}/${total} actions valid`];
+  if (failed > 0) lines.push(`  ${failed} action(s) failed validation`);
+  for (const issue of batchIssues) lines.push(`  • ${issue}`);
+  return lines.join('\n');
+}
