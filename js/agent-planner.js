@@ -62,3 +62,26 @@ export function planNextActions(items, daysFromToday) {
   }
   return out.sort((a, b) => b.confidence - a.confidence);
 }
+
+/**
+ * Format planner suggestions as a printable summary suitable for console or UI display.
+ * @param {Array} suggestions - Output from planNextActions
+ * @returns {string} Multi-line summary
+ */
+export function summarizePlannerSuggestions(suggestions) {
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    return 'Planner: no suggested actions';
+  }
+  const byAction = new Map();
+  for (const s of suggestions) {
+    if (!s || typeof s !== 'object' || !s.actionId) continue;
+    byAction.set(s.actionId, (byAction.get(s.actionId) || 0) + 1);
+  }
+  const lines = [`Planner: ${suggestions.length} suggested action(s)`];
+  for (const [actionId, count] of byAction) lines.push(`  ${actionId}: ${count}`);
+  const top = suggestions[0];
+  if (top && top.title && top.actionId) {
+    lines.push(`  Top: ${top.title} → ${top.actionId} (${top.confidence}%)`);
+  }
+  return lines.join('\n');
+}

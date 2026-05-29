@@ -1,4 +1,4 @@
-import { GUARDRAILS, planNextActions } from './agent-planner.js';
+import { GUARDRAILS, planNextActions, summarizePlannerSuggestions } from './agent-planner.js';
 
 // daysFromToday stub: always returns the given offset regardless of date string
 const fixed = (days) => (_dateStr) => days;
@@ -129,6 +129,26 @@ const t13 = planNextActions(
   () => NaN,
 );
 console.assert(t13.length === 0, 'NaN daysDue should produce no suggestions');
+console.log('   ✓ Passed\n');
+
+// Test 14: summarizePlannerSuggestions formats a populated plan
+console.log('14. summarizePlannerSuggestions formats a populated plan');
+const t14 = summarizePlannerSuggestions(
+  planNextActions(
+    [{ id: '1', title: 'Acme', state: 'Seen', metric: 8, score: 8, date: '' }],
+    fixed(5),
+  ),
+);
+console.assert(t14.startsWith('Planner: 1 suggested action'), 'Should report count');
+console.assert(t14.includes('qualify: 1'), 'Should group by actionId');
+console.assert(t14.includes('Top: Acme → qualify'), 'Should surface top suggestion');
+console.log('   ✓ Passed\n');
+
+// Test 15: summarizePlannerSuggestions handles empty and non-array input
+console.log('15. summarizePlannerSuggestions handles empty/invalid input');
+console.assert(summarizePlannerSuggestions([]) === 'Planner: no suggested actions', 'empty array');
+console.assert(summarizePlannerSuggestions(null) === 'Planner: no suggested actions', 'null');
+console.assert(summarizePlannerSuggestions(undefined) === 'Planner: no suggested actions', 'undefined');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');
