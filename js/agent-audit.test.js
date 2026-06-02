@@ -1,5 +1,6 @@
 import {
   AGENT_AUDIT_CHECKLIST,
+  AUDIT_THRESHOLDS,
   validateAgentAction,
   auditAgentExecution,
   summarizeAuditResult,
@@ -172,6 +173,31 @@ console.log('16. summarizeAuditResult handles null input');
 console.assert(summarizeAuditResult(null) === 'No audit result available', 'null should be handled');
 console.assert(summarizeAuditResult(undefined) === 'No audit result available', 'undefined should be handled');
 console.assert(summarizeAuditResult(42) === 'No audit result available', 'non-object should be handled');
+console.log('   ✓ Passed\n');
+
+// Test 17: AUDIT_THRESHOLDS exposes the low average confidence threshold
+console.log('17. AUDIT_THRESHOLDS exports lowAverageConfidence as a finite number');
+console.assert(
+  typeof AUDIT_THRESHOLDS.lowAverageConfidence === 'number' &&
+    Number.isFinite(AUDIT_THRESHOLDS.lowAverageConfidence),
+  'lowAverageConfidence should be a finite number',
+);
+console.log('   ✓ Passed\n');
+
+// Test 18: Low-confidence warning respects AUDIT_THRESHOLDS.lowAverageConfidence
+console.log('18. Low-confidence warning fires below threshold, not at/above it');
+const justBelow = Math.max(0, AUDIT_THRESHOLDS.lowAverageConfidence - 1);
+const atThreshold = AUDIT_THRESHOLDS.lowAverageConfidence;
+const belowResult = auditAgentExecution([{ ...validAction, itemId: 'opp-low', confidence: justBelow }]);
+const atResult = auditAgentExecution([{ ...validAction, itemId: 'opp-at', confidence: atThreshold }]);
+console.assert(
+  belowResult.batchIssues.some((i) => i.includes('Low average confidence')),
+  'Should warn when avg confidence is below threshold',
+);
+console.assert(
+  !atResult.batchIssues.some((i) => i.includes('Low average confidence')),
+  'Should not warn when avg confidence equals threshold',
+);
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

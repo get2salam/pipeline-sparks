@@ -3,6 +3,13 @@
  * Ensures agents follow safety and consistency guardrails.
  */
 
+// Tunable thresholds used by auditAgentExecution. Exposed so callers and tests
+// can reference the same constants the audit logic uses.
+export const AUDIT_THRESHOLDS = {
+  // Batch warning fires when the average action confidence is below this percent.
+  lowAverageConfidence: 30,
+};
+
 export const AGENT_AUDIT_CHECKLIST = {
   // Action validation
   action: {
@@ -118,7 +125,7 @@ export function auditAgentExecution(actions, items = []) {
     .map((a) => a.confidence);
   if (numericConfidences.length > 0) {
     const avgConfidence = numericConfidences.reduce((sum, c) => sum + c, 0) / numericConfidences.length;
-    if (avgConfidence < 30) {
+    if (avgConfidence < AUDIT_THRESHOLDS.lowAverageConfidence) {
       batchIssues.push(`Low average confidence: ${Math.round(avgConfidence)}% — agent may be uncertain`);
     }
   }
