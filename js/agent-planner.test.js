@@ -1,4 +1,9 @@
-import { GUARDRAILS, planNextActions, summarizePlannerSuggestions } from './agent-planner.js';
+import {
+  GUARDRAILS,
+  planNextActions,
+  bestSuggestionPerItem,
+  summarizePlannerSuggestions,
+} from './agent-planner.js';
 
 // daysFromToday stub: always returns the given offset regardless of date string
 const fixed = (days) => (_dateStr) => days;
@@ -149,6 +154,39 @@ console.log('15. summarizePlannerSuggestions handles empty/invalid input');
 console.assert(summarizePlannerSuggestions([]) === 'Planner: no suggested actions', 'empty array');
 console.assert(summarizePlannerSuggestions(null) === 'Planner: no suggested actions', 'null');
 console.assert(summarizePlannerSuggestions(undefined) === 'Planner: no suggested actions', 'undefined');
+console.log('   ✓ Passed\n');
+
+// Test 16: bestSuggestionPerItem keeps the highest-confidence suggestion per itemId
+console.log('16. bestSuggestionPerItem dedupes by itemId, keeps first occurrence');
+const t16 = bestSuggestionPerItem([
+  { itemId: '1', title: 'Acme', actionId: 'qualify', confidence: 80 },
+  { itemId: '1', title: 'Acme', actionId: 'nudge-follow-up', confidence: 72 },
+  { itemId: '2', title: 'Beta', actionId: 'raise-win', confidence: 66 },
+]);
+console.assert(t16.length === 2, `Expected 2 deduped suggestions, got ${t16.length}`);
+console.assert(t16[0].actionId === 'qualify', 'First (highest-confidence) entry for item 1 should win');
+console.assert(t16[1].itemId === '2', 'Item 2 should be retained');
+console.log('   ✓ Passed\n');
+
+// Test 17: bestSuggestionPerItem composes with planNextActions output
+console.log('17. bestSuggestionPerItem yields one suggestion per itemId from planner output');
+const planOut = planNextActions(
+  [{ id: '1', title: 'Multi', state: 'Seen', metric: 8, score: 8, date: '' }],
+  fixed(-2), // overdue → also fires nudge-follow-up
+);
+console.assert(planOut.length >= 2, 'Setup should produce at least 2 suggestions for item 1');
+const t17 = bestSuggestionPerItem(planOut);
+console.assert(t17.length === 1, `Expected 1 deduped suggestion, got ${t17.length}`);
+console.assert(t17[0].itemId === '1', 'Survivor should reference item 1');
+console.log('   ✓ Passed\n');
+
+// Test 18: bestSuggestionPerItem handles bad input safely
+console.log('18. bestSuggestionPerItem handles null/invalid input and skips malformed entries');
+console.assert(bestSuggestionPerItem(null).length === 0, 'null should return []');
+console.assert(bestSuggestionPerItem(undefined).length === 0, 'undefined should return []');
+console.assert(bestSuggestionPerItem({}).length === 0, 'non-array should return []');
+const t18 = bestSuggestionPerItem([null, 42, { itemId: null }, { itemId: 'ok', actionId: 'qualify' }]);
+console.assert(t18.length === 1 && t18[0].itemId === 'ok', 'Should skip malformed entries');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

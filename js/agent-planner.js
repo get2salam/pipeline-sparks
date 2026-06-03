@@ -64,6 +64,32 @@ export function planNextActions(items, daysFromToday) {
 }
 
 /**
+ * Reduce a sorted suggestion list to the single highest-confidence suggestion
+ * per itemId. Useful when a UI slot budget would otherwise be consumed by
+ * multiple suggestions for the same opportunity (e.g. an item that matches
+ * both `qualify` and `nudge-follow-up`).
+ *
+ * Order is preserved: the first occurrence of each itemId wins, so callers
+ * should pass suggestions already sorted by descending confidence — which is
+ * the shape returned by {@link planNextActions}.
+ *
+ * @param {Array} suggestions - Output from planNextActions
+ * @returns {Array} Deduplicated suggestions, at most one per itemId
+ */
+export function bestSuggestionPerItem(suggestions) {
+  if (!Array.isArray(suggestions)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const s of suggestions) {
+    if (!s || typeof s !== 'object' || s.itemId == null) continue;
+    if (seen.has(s.itemId)) continue;
+    seen.add(s.itemId);
+    out.push(s);
+  }
+  return out;
+}
+
+/**
  * Format planner suggestions as a printable summary suitable for console or UI display.
  * @param {Array} suggestions - Output from planNextActions
  * @returns {string} Multi-line summary
