@@ -90,6 +90,32 @@ export function bestSuggestionPerItem(suggestions) {
 }
 
 /**
+ * Filter planner suggestions to those at or above a minimum confidence percent.
+ * Use this when the UI wants to suppress borderline suggestions (e.g. only show
+ * confidence >= 70%). Confidence values from {@link planNextActions} are already
+ * integers in 0-100, so the threshold should be expressed in the same units.
+ *
+ * Order is preserved. Invalid entries (null, non-object, non-finite confidence)
+ * are dropped silently rather than throwing.
+ *
+ * @param {Array}  suggestions   - Output from planNextActions
+ * @param {number} minConfidence - Inclusive lower bound (0-100)
+ * @returns {Array} Suggestions whose confidence >= minConfidence
+ */
+export function filterByMinConfidence(suggestions, minConfidence) {
+  if (!Array.isArray(suggestions)) return [];
+  if (typeof minConfidence !== 'number' || !Number.isFinite(minConfidence)) return [];
+  return suggestions.filter(
+    (s) =>
+      s &&
+      typeof s === 'object' &&
+      typeof s.confidence === 'number' &&
+      Number.isFinite(s.confidence) &&
+      s.confidence >= minConfidence,
+  );
+}
+
+/**
  * Format planner suggestions as a printable summary suitable for console or UI display.
  * @param {Array} suggestions - Output from planNextActions
  * @returns {string} Multi-line summary

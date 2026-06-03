@@ -2,6 +2,7 @@ import {
   GUARDRAILS,
   planNextActions,
   bestSuggestionPerItem,
+  filterByMinConfidence,
   summarizePlannerSuggestions,
 } from './agent-planner.js';
 
@@ -187,6 +188,32 @@ console.assert(bestSuggestionPerItem(undefined).length === 0, 'undefined should 
 console.assert(bestSuggestionPerItem({}).length === 0, 'non-array should return []');
 const t18 = bestSuggestionPerItem([null, 42, { itemId: null }, { itemId: 'ok', actionId: 'qualify' }]);
 console.assert(t18.length === 1 && t18[0].itemId === 'ok', 'Should skip malformed entries');
+console.log('   ✓ Passed\n');
+
+// Test 19: filterByMinConfidence keeps entries at/above threshold and preserves order
+console.log('19. filterByMinConfidence keeps entries >= threshold, preserves order');
+const t19 = filterByMinConfidence(
+  [
+    { itemId: '1', confidence: 90 },
+    { itemId: '2', confidence: 70 },
+    { itemId: '3', confidence: 55 },
+  ],
+  70,
+);
+console.assert(t19.length === 2, `Expected 2 entries, got ${t19.length}`);
+console.assert(t19[0].itemId === '1' && t19[1].itemId === '2', 'Order should be preserved');
+console.log('   ✓ Passed\n');
+
+// Test 20: filterByMinConfidence handles bad input safely
+console.log('20. filterByMinConfidence handles null/invalid input and skips malformed entries');
+console.assert(filterByMinConfidence(null, 50).length === 0, 'null suggestions should return []');
+console.assert(filterByMinConfidence([], 'high').length === 0, 'non-numeric threshold should return []');
+console.assert(filterByMinConfidence([], NaN).length === 0, 'NaN threshold should return []');
+const t20 = filterByMinConfidence(
+  [null, 42, { confidence: 'high' }, { confidence: NaN }, { confidence: 80 }],
+  50,
+);
+console.assert(t20.length === 1 && t20[0].confidence === 80, 'Should skip malformed entries');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');
