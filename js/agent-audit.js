@@ -138,6 +138,25 @@ export function auditAgentExecution(actions, items = []) {
 }
 
 /**
+ * Extract the failing entries from an audit result.
+ * Use this when a caller needs programmatic access to just the actions that
+ * failed validation — e.g. to retry them, surface them in a UI, or escalate
+ * for human review — without re-parsing the {@link summarizeAuditResult} text
+ * output or iterating the full actionResults array manually.
+ *
+ * Order matches the original auditAgentExecution output. Malformed or missing
+ * input returns an empty array rather than throwing.
+ *
+ * @param {Object} result - Output from auditAgentExecution
+ * @returns {Array} Action result entries whose `valid` flag is false
+ */
+export function getFailedAuditResults(result) {
+  if (result == null || typeof result !== 'object') return [];
+  if (!Array.isArray(result.actionResults)) return [];
+  return result.actionResults.filter((r) => r && r.valid === false);
+}
+
+/**
  * Format an audit result as a printable summary suitable for console or UI display.
  * @param {Object} result - Output from auditAgentExecution
  * @returns {string} Multi-line summary
