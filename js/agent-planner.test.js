@@ -3,6 +3,7 @@ import {
   planNextActions,
   bestSuggestionPerItem,
   filterByMinConfidence,
+  countSuggestionsByAction,
   summarizePlannerSuggestions,
 } from './agent-planner.js';
 
@@ -214,6 +215,42 @@ const t20 = filterByMinConfidence(
   50,
 );
 console.assert(t20.length === 1 && t20[0].confidence === 80, 'Should skip malformed entries');
+console.log('   ✓ Passed\n');
+
+// Test 21: countSuggestionsByAction groups counts by actionId
+console.log('21. countSuggestionsByAction groups counts by actionId');
+const t21 = countSuggestionsByAction([
+  { itemId: '1', actionId: 'qualify', confidence: 80 },
+  { itemId: '2', actionId: 'qualify', confidence: 70 },
+  { itemId: '3', actionId: 'raise-win', confidence: 66 },
+]);
+console.assert(t21.qualify === 2, `Expected qualify=2, got ${t21.qualify}`);
+console.assert(t21['raise-win'] === 1, `Expected raise-win=1, got ${t21['raise-win']}`);
+console.log('   ✓ Passed\n');
+
+// Test 22: countSuggestionsByAction composes with planNextActions output
+console.log('22. countSuggestionsByAction composes with planNextActions output');
+const t22 = countSuggestionsByAction(
+  planNextActions(
+    [
+      { id: '1', title: 'Acme', state: 'Seen', metric: 8, score: 8, date: '' },
+      { id: '2', title: 'Beta', state: 'Qualified', metric: 7, score: 8, date: '' },
+    ],
+    fixed(5),
+  ),
+);
+console.assert(t22.qualify === 1, `Expected qualify=1, got ${t22.qualify}`);
+console.assert(t22['raise-win'] === 1, `Expected raise-win=1, got ${t22['raise-win']}`);
+console.log('   ✓ Passed\n');
+
+// Test 23: countSuggestionsByAction handles null/invalid input and skips malformed entries
+console.log('23. countSuggestionsByAction handles null/invalid input safely');
+console.assert(Object.keys(countSuggestionsByAction(null)).length === 0, 'null should return {}');
+console.assert(Object.keys(countSuggestionsByAction(undefined)).length === 0, 'undefined should return {}');
+console.assert(Object.keys(countSuggestionsByAction({})).length === 0, 'non-array should return {}');
+const t23 = countSuggestionsByAction([null, 42, { actionId: null }, { actionId: 'qualify' }]);
+console.assert(t23.qualify === 1, 'Should skip malformed entries and still count valid ones');
+console.assert(Object.keys(t23).length === 1, 'Should not produce keys for malformed entries');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

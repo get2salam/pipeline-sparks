@@ -116,6 +116,30 @@ export function filterByMinConfidence(suggestions, minConfidence) {
 }
 
 /**
+ * Count planner suggestions grouped by actionId.
+ * Returns a plain object keyed by actionId with the number of suggestions for
+ * each. Use this to drive distribution dashboards, grouped UI sections, or
+ * routing logic without re-walking the raw suggestion array. Both
+ * {@link summarizePlannerSuggestions} and {@link planNextActions} produce
+ * shapes that flow directly into this helper.
+ *
+ * Malformed entries (null, non-object, missing actionId) are skipped silently.
+ * Bad input returns an empty object rather than throwing.
+ *
+ * @param {Array} suggestions - Output from planNextActions
+ * @returns {Object} Map of actionId → integer count
+ */
+export function countSuggestionsByAction(suggestions) {
+  if (!Array.isArray(suggestions)) return {};
+  const counts = {};
+  for (const s of suggestions) {
+    if (!s || typeof s !== 'object' || !s.actionId) continue;
+    counts[s.actionId] = (counts[s.actionId] || 0) + 1;
+  }
+  return counts;
+}
+
+/**
  * Format planner suggestions as a printable summary suitable for console or UI display.
  * @param {Array} suggestions - Output from planNextActions
  * @returns {string} Multi-line summary
