@@ -157,6 +157,24 @@ export function getFailedAuditResults(result) {
 }
 
 /**
+ * Extract the passing entries from an audit result.
+ * Counterpart to {@link getFailedAuditResults}. Use this when a caller wants to
+ * proceed with only the validated subset of an audit batch — e.g. forward the
+ * passing actions to an executor while routing failures to review.
+ *
+ * Order matches the original auditAgentExecution output. Malformed or missing
+ * input returns an empty array rather than throwing.
+ *
+ * @param {Object} result - Output from auditAgentExecution
+ * @returns {Array} Action result entries whose `valid` flag is true
+ */
+export function getPassingAuditResults(result) {
+  if (result == null || typeof result !== 'object') return [];
+  if (!Array.isArray(result.actionResults)) return [];
+  return result.actionResults.filter((r) => r && r.valid === true);
+}
+
+/**
  * Format an audit result as a printable summary suitable for console or UI display.
  * @param {Object} result - Output from auditAgentExecution
  * @returns {string} Multi-line summary

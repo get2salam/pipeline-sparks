@@ -4,6 +4,7 @@ import {
   validateAgentAction,
   auditAgentExecution,
   getFailedAuditResults,
+  getPassingAuditResults,
   summarizeAuditResult,
 } from './agent-audit.js';
 
@@ -232,6 +233,40 @@ console.assert(getFailedAuditResults(42).length === 0, 'non-object should return
 console.assert(getFailedAuditResults({}).length === 0, 'missing actionResults should return []');
 console.assert(
   getFailedAuditResults({ actionResults: 'not-array' }).length === 0,
+  'non-array actionResults should return []',
+);
+console.log('   ✓ Passed\n');
+
+// Test 22: getPassingAuditResults returns only passing entries, preserves order
+console.log('22. getPassingAuditResults returns only passing entries, preserves order');
+const test22Result = auditAgentExecution([
+  { ...validAction, itemId: 'opp-ok-1' },
+  { ...validAction, itemId: null }, // fails itemRef
+  { ...validAction, itemId: 'opp-ok-2' },
+]);
+const test22 = getPassingAuditResults(test22Result);
+console.assert(test22.length === 2, `Expected 2 passes, got ${test22.length}`);
+console.assert(test22.every((r) => r.valid === true), 'Every returned entry should have valid=true');
+console.assert(test22[0].action.itemId === 'opp-ok-1', 'First pass should preserve original order');
+console.assert(test22[1].action.itemId === 'opp-ok-2', 'Second pass should preserve original order');
+console.log('   ✓ Passed\n');
+
+// Test 23: getPassingAuditResults returns [] when all actions fail
+console.log('23. getPassingAuditResults returns [] when all actions fail');
+const test23 = getPassingAuditResults(
+  auditAgentExecution([{ ...validAction, itemId: null }]),
+);
+console.assert(test23.length === 0, 'No passes expected');
+console.log('   ✓ Passed\n');
+
+// Test 24: getPassingAuditResults handles null/invalid input safely
+console.log('24. getPassingAuditResults handles null/invalid input safely');
+console.assert(getPassingAuditResults(null).length === 0, 'null should return []');
+console.assert(getPassingAuditResults(undefined).length === 0, 'undefined should return []');
+console.assert(getPassingAuditResults(42).length === 0, 'non-object should return []');
+console.assert(getPassingAuditResults({}).length === 0, 'missing actionResults should return []');
+console.assert(
+  getPassingAuditResults({ actionResults: 'not-array' }).length === 0,
   'non-array actionResults should return []',
 );
 console.log('   ✓ Passed\n');
