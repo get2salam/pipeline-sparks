@@ -4,6 +4,7 @@ import {
   bestSuggestionPerItem,
   filterByMinConfidence,
   countSuggestionsByAction,
+  groupSuggestionsByAction,
   summarizePlannerSuggestions,
 } from './agent-planner.js';
 
@@ -251,6 +252,43 @@ console.assert(Object.keys(countSuggestionsByAction({})).length === 0, 'non-arra
 const t23 = countSuggestionsByAction([null, 42, { actionId: null }, { actionId: 'qualify' }]);
 console.assert(t23.qualify === 1, 'Should skip malformed entries and still count valid ones');
 console.assert(Object.keys(t23).length === 1, 'Should not produce keys for malformed entries');
+console.log('   ✓ Passed\n');
+
+// Test 24: groupSuggestionsByAction returns full entries grouped by actionId
+console.log('24. groupSuggestionsByAction groups full entries by actionId');
+const t24 = groupSuggestionsByAction([
+  { itemId: '1', actionId: 'qualify', confidence: 80 },
+  { itemId: '2', actionId: 'qualify', confidence: 70 },
+  { itemId: '3', actionId: 'raise-win', confidence: 66 },
+]);
+console.assert(t24.qualify.length === 2, `Expected qualify bucket size 2, got ${t24.qualify?.length}`);
+console.assert(t24.qualify[0].itemId === '1', 'Order within bucket should be preserved');
+console.assert(t24['raise-win'].length === 1, `Expected raise-win bucket size 1, got ${t24['raise-win']?.length}`);
+console.log('   ✓ Passed\n');
+
+// Test 25: groupSuggestionsByAction composes with planNextActions output
+console.log('25. groupSuggestionsByAction composes with planNextActions output');
+const t25 = groupSuggestionsByAction(
+  planNextActions(
+    [
+      { id: '1', title: 'Acme', state: 'Seen', metric: 8, score: 8, date: '' },
+      { id: '2', title: 'Beta', state: 'Qualified', metric: 7, score: 8, date: '' },
+    ],
+    fixed(5),
+  ),
+);
+console.assert(t25.qualify?.[0].title === 'Acme', 'Acme should land in qualify bucket');
+console.assert(t25['raise-win']?.[0].title === 'Beta', 'Beta should land in raise-win bucket');
+console.log('   ✓ Passed\n');
+
+// Test 26: groupSuggestionsByAction handles null/invalid input safely
+console.log('26. groupSuggestionsByAction handles null/invalid input safely');
+console.assert(Object.keys(groupSuggestionsByAction(null)).length === 0, 'null should return {}');
+console.assert(Object.keys(groupSuggestionsByAction(undefined)).length === 0, 'undefined should return {}');
+console.assert(Object.keys(groupSuggestionsByAction({})).length === 0, 'non-array should return {}');
+const t26 = groupSuggestionsByAction([null, 42, { actionId: null }, { actionId: 'qualify', itemId: 'ok' }]);
+console.assert(t26.qualify?.length === 1, 'Should skip malformed entries and bucket the valid one');
+console.assert(Object.keys(t26).length === 1, 'Should not create buckets for malformed entries');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

@@ -140,6 +140,31 @@ export function countSuggestionsByAction(suggestions) {
 }
 
 /**
+ * Group planner suggestions by actionId, returning the full suggestion entries
+ * rather than just counts. Complements {@link countSuggestionsByAction}, which
+ * answers "how many of each?"; this answers "which ones are in each bucket?"
+ * and is the shape a UI needs to render distinct sections per action type
+ * (e.g. a "Qualify" column next to a "Raise win" column).
+ *
+ * Order within each bucket is preserved from the input, so passing the output
+ * of {@link planNextActions} keeps each bucket sorted by descending confidence.
+ * Malformed entries (null, non-object, missing actionId) are skipped silently;
+ * bad input returns an empty object rather than throwing.
+ *
+ * @param {Array} suggestions - Output from planNextActions
+ * @returns {Object} Map of actionId → array of suggestions
+ */
+export function groupSuggestionsByAction(suggestions) {
+  if (!Array.isArray(suggestions)) return {};
+  const groups = {};
+  for (const s of suggestions) {
+    if (!s || typeof s !== 'object' || !s.actionId) continue;
+    (groups[s.actionId] ||= []).push(s);
+  }
+  return groups;
+}
+
+/**
  * Format planner suggestions as a printable summary suitable for console or UI display.
  * @param {Array} suggestions - Output from planNextActions
  * @returns {string} Multi-line summary
