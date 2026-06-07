@@ -31,6 +31,16 @@ python -m http.server 8000
 
 Then open <http://localhost:8000>.
 
+## Running the agent tests
+
+The pipeline agent logic in `js/agent-audit.js` and `js/agent-planner.js` is covered by Node-based assertion suites in `js/*.test.js`. Run them with:
+
+```bash
+npm test
+```
+
+The runner in `scripts/run-tests.mjs` patches `console.assert` so failed assertions exit with a non-zero status, which makes the suite safe to wire into CI. Individual suites are available via `npm run test:audit` and `npm run test:planner`.
+
 ## Keyboard shortcuts
 
 Shortcuts only fire when no input is focused and no modifier keys (Cmd, Ctrl, Alt) are held, so browser shortcuts like Cmd+N keep working as expected.

@@ -1,0 +1,17 @@
+{
+  "name": "pipeline-sparks",
+  "version": "1.0.0",
+  "description": "Track lightweight opportunities before they either compound or cool off.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node scripts/run-tests.mjs",
+    "test:audit": "node scripts/run-tests.mjs js/agent-audit.test.js",
+    "test:planner": "node scripts/run-tests.mjs js/agent-planner.test.js",
+    "serve": "python3 -m http.server 8000"
+  }
+}
