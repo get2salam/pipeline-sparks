@@ -1,5 +1,7 @@
 # Pipeline Sparks
 
+[![tests](https://github.com/get2salam/pipeline-sparks/actions/workflows/tests.yml/badge.svg)](https://github.com/get2salam/pipeline-sparks/actions/workflows/tests.yml)
+
 Track lightweight opportunities before they either compound or cool off.
 
 ![Pipeline Sparks preview](docs/preview.svg)
@@ -40,6 +42,8 @@ npm test
 ```
 
 The runner in `scripts/run-tests.mjs` patches `console.assert` so failed assertions exit with a non-zero status, which makes the suite safe to wire into CI. Individual suites are available via `npm run test:audit` and `npm run test:planner`.
+
+The same `npm test` command runs in CI via [`.github/workflows/tests.yml`](.github/workflows/tests.yml) on every push and pull request to `main`, against Node 20 and Node 22.
 
 ## Keyboard shortcuts
 
