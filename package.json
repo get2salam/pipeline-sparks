@@ -12,6 +12,7 @@
     "test": "node scripts/run-tests.mjs",
     "test:audit": "node scripts/run-tests.mjs js/agent-audit.test.js",
     "test:planner": "node scripts/run-tests.mjs js/agent-planner.test.js",
+    "example:planner": "node examples/planner-preview.mjs",
     "serve": "python3 -m http.server 8000"
   }
 }

@@ -45,6 +45,16 @@ The runner in `scripts/run-tests.mjs` patches `console.assert` so failed asserti
 
 The same `npm test` command runs in CI via [`.github/workflows/tests.yml`](.github/workflows/tests.yml) on every push and pull request to `main`, against Node 20 and Node 22.
 
+## Runnable planner preview
+
+Use the checked-in example to see how the planner and audit helpers compose before wiring them into a UI or automation loop:
+
+```bash
+npm run example:planner
+```
+
+The preview runs `examples/planner-preview.mjs`, which builds a small deterministic opportunity pipeline, plans the next actions, reduces them to one suggestion per opportunity, audits the focused batch, and prints grouped recommendations. It is intentionally offline and dependency-free so it can double as a quick smoke test for agent-facing changes.
+
 ## Keyboard shortcuts
 
 Shortcuts only fire when no input is focused and no modifier keys (Cmd, Ctrl, Alt) are held, so browser shortcuts like Cmd+N keep working as expected.
