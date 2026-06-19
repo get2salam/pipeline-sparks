@@ -52,6 +52,18 @@ button, input, select, textarea {
   justify-content: flex-end;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -241,6 +253,12 @@ textarea {
   gap: 12px;
 }
 
+.list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
 .insights {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 18px;
@@ -257,6 +275,7 @@ textarea {
 
 .item {
   cursor: pointer;
+  width: 100%;
 }
 
 .item.is-selected {
@@ -281,6 +300,10 @@ textarea {
   padding: 18px;
   border-radius: 20px;
   border: 1px dashed rgba(255,255,255,0.12);
+}
+
+.empty .btn {
+  margin-top: 14px;
 }
 
 .editor-panel,

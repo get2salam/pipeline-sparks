@@ -161,6 +161,7 @@ const refs = {
   stats: document.querySelector('[data-role="stats"]'),
   insights: document.querySelector('[data-role="insights"]'),
   count: document.querySelector('[data-role="count"]'),
+  resultStatus: document.querySelector('[data-role="result-status"]'),
   list: document.querySelector('[data-role="list"]'),
   editor: document.querySelector('[data-role="editor"]'),
   secondaryPrimary: document.querySelector('[data-role="secondary-primary"]'),
@@ -360,6 +361,15 @@ function selectedItem() {
   return state.items.find((item) => item.id === state.ui.selectedId) || filteredItems()[0] || null;
 }
 
+function filtersActive() {
+  return Boolean(state.ui.search.trim()) || state.ui.category !== 'all' || state.ui.status !== 'all';
+}
+
+function clearFilters() {
+  commit({ ...state, ui: { ...state.ui, search: '', category: 'all', status: 'all' } });
+  showToast('Cleared filters.');
+}
+
 function commit(nextState) {
   state = nextState;
   if (!state.ui.selectedId && state.items[0]) state.ui.selectedId = state.items[0].id;
@@ -523,12 +533,20 @@ function renderInsights(items) {
 }
 
 function renderList(items) {
+  const activeFilters = filtersActive();
+  refs.resultStatus.textContent = items.length
+    ? `${items.length} ${items.length === 1 ? SPEC.itemLabel : SPEC.itemPluralLabel.toLowerCase()} visible. ${items[0].title} is the top result.`
+    : activeFilters
+      ? `No ${SPEC.itemPluralLabel.toLowerCase()} match the current filters.`
+      : `No ${SPEC.itemPluralLabel.toLowerCase()} on the board yet.`;
+
   if (!items.length) {
     refs.list.innerHTML = `
-      <div class="empty">
-        <strong>${SPEC.emptyTitle}</strong>
-        <p>${SPEC.emptyBody}</p>
-      </div>
+      <li class="empty">
+        <strong>${activeFilters ? 'No matching opportunities' : SPEC.emptyTitle}</strong>
+        <p>${activeFilters ? 'Try clearing search, opportunity type, or status filters to bring hidden sparks back into view.' : SPEC.emptyBody}</p>
+        ${activeFilters ? '<button class="btn" type="button" data-action="clear-filters">Clear filters</button>' : ''}
+      </li>
     `;
     return;
   }
@@ -536,24 +554,26 @@ function renderList(items) {
   refs.list.innerHTML = items.map((item) => {
     const isSelected = item.id === state.ui.selectedId;
     return `
-    <button class="item ${isSelected ? 'is-selected' : ''}" type="button" data-id="${escapeHtml(item.id)}" aria-current="${isSelected ? 'true' : 'false'}">
-      <div class="item-top">
-        <strong>${escapeHtml(item.title)}</strong>
-        <span class="score">${priority(item)}</span>
-      </div>
-      <p>${escapeHtml(item.note)}</p>
-      <div class="badge-row">
-        <span class="pill ${toneForDate(item)}">${formatDate(item.date)}</span>
-        <span class="pill">${escapeHtml(item.textOne)}</span>
-        <span class="pill">${SPEC.metric.label} ${item.metric}/${SPEC.metric.max}</span>
-      </div>
-      <div class="meta">
-        <span>${item.category}</span>
-        <span>${item.state}</span>
-        <span>${SPEC.textTwo.label}: ${escapeHtml(item.textTwo)}</span>
-        <span>Friction ${item.effort}/10</span>
-      </div>
-    </button>
+    <li>
+      <button class="item ${isSelected ? 'is-selected' : ''}" type="button" data-id="${escapeHtml(item.id)}" aria-current="${isSelected ? 'true' : 'false'}" aria-label="${escapeHtml(item.title)}. ${escapeHtml(item.state)} ${escapeHtml(item.category)}. Priority ${priority(item)}. ${SPEC.textTwo.label}: ${escapeHtml(item.textTwo)}.">
+        <div class="item-top">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="score">${priority(item)}</span>
+        </div>
+        <p>${escapeHtml(item.note)}</p>
+        <div class="badge-row">
+          <span class="pill ${toneForDate(item)}">${formatDate(item.date)}</span>
+          <span class="pill">${escapeHtml(item.textOne)}</span>
+          <span class="pill">${SPEC.metric.label} ${item.metric}/${SPEC.metric.max}</span>
+        </div>
+        <div class="meta">
+          <span>${item.category}</span>
+          <span>${item.state}</span>
+          <span>${SPEC.textTwo.label}: ${escapeHtml(item.textTwo)}</span>
+          <span>Friction ${item.effort}/10</span>
+        </div>
+      </button>
+    </li>
   `;
   }).join('');
 }
@@ -717,6 +737,7 @@ document.addEventListener('click', (event) => {
   const explicit = event.target.closest('[data-action]')?.dataset.action;
   if (explicit === 'new') { addItem(); return; }
   if (explicit === 'reset') { commit(seedState()); showToast('Re-seeded sample board.'); return; }
+  if (explicit === 'clear-filters') { clearFilters(); return; }
   if (explicit === 'remove-current') { removeSelected(); return; }
   if (explicit === 'export') { exportState(); return; }
   if (explicit === 'import') { refs.importFile.click(); return; }

@@ -16,9 +16,9 @@
           <p class="lede">Keep opportunity sparks alive with better source notes, next touches, win chance, and follow-up dates.</p>
         </div>
         <div class="actions">
-          <button class="btn" data-action="import">Import</button>
-          <button class="btn" data-action="export">Export</button>
-          <button class="btn btn-primary" data-action="new">New opportunity</button>
+          <button class="btn" type="button" data-action="import" aria-label="Import a Pipeline Sparks JSON backup">Import</button>
+          <button class="btn" type="button" data-action="export" aria-label="Export the current Pipeline Sparks board as JSON">Export</button>
+          <button class="btn btn-primary" type="button" data-action="new" aria-label="Create a new opportunity">New opportunity</button>
           <input id="import-file" type="file" accept=".json,application/json" hidden />
         </div>
       </header>
@@ -60,7 +60,8 @@
             </div>
             <span class="chip" data-role="count"></span>
           </div>
-          <div class="list" data-role="list"></div>
+          <p class="sr-only" data-role="result-status" aria-live="polite"></p>
+          <ul class="list" data-role="list" aria-label="Opportunities"></ul>
         </article>
         <article class="card editor-panel" data-role="editor"></article>
       </section>
