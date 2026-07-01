@@ -6,6 +6,7 @@ import {
   countSuggestionsByAction,
   groupSuggestionsByAction,
   summarizePlannerSuggestions,
+  scorePipelineHealth,
 } from './agent-planner.js';
 
 // daysFromToday stub: always returns the given offset regardless of date string
@@ -289,6 +290,83 @@ console.assert(Object.keys(groupSuggestionsByAction({})).length === 0, 'non-arra
 const t26 = groupSuggestionsByAction([null, 42, { actionId: null }, { actionId: 'qualify', itemId: 'ok' }]);
 console.assert(t26.qualify?.length === 1, 'Should skip malformed entries and bucket the valid one');
 console.assert(Object.keys(t26).length === 1, 'Should not create buckets for malformed entries');
+console.log('   ✓ Passed\n');
+
+// Test 27: scorePipelineHealth returns score 100 for empty active pipeline
+console.log('27. scorePipelineHealth returns 100 for empty pipeline');
+const t27 = scorePipelineHealth([], fixed(5));
+console.assert(t27.score === 100, `Expected 100, got ${t27.score}`);
+console.assert(t27.breakdown.total === 0, 'total should be 0');
+console.assert(t27.breakdown.overdue === 0, 'overdue should be 0');
+console.assert(t27.breakdown.imminent === 0, 'imminent should be 0');
+console.log('   ✓ Passed\n');
+
+// Test 28: scorePipelineHealth returns score 100 when all active items are safely in the future
+console.log('28. scorePipelineHealth returns 100 when all dates are safely future');
+const t28 = scorePipelineHealth(
+  [{ id: '1', state: 'Seen', date: '' }, { id: '2', state: 'Qualified', date: '' }],
+  fixed(10),
+);
+console.assert(t28.score === 100, `Expected 100, got ${t28.score}`);
+console.assert(t28.breakdown.total === 2, 'total should be 2');
+console.log('   ✓ Passed\n');
+
+// Test 29: scorePipelineHealth lowers score when items are overdue
+console.log('29. scorePipelineHealth lowers score for overdue items');
+const t29 = scorePipelineHealth(
+  [{ id: '1', state: 'Seen', date: '' }],
+  fixed(-1),
+);
+console.assert(t29.score < 100, 'Score should drop when an item is overdue');
+console.assert(t29.breakdown.overdue === 1, 'overdue should be 1');
+console.assert(t29.breakdown.imminent === 0, 'imminent should be 0');
+console.log('   ✓ Passed\n');
+
+// Test 30: scorePipelineHealth penalises overdue more than imminent
+console.log('30. scorePipelineHealth penalises overdue more than imminent');
+const allOverdue = scorePipelineHealth(
+  [{ id: '1', state: 'Seen', date: '' }],
+  fixed(-3),
+).score;
+const allImminent = scorePipelineHealth(
+  [{ id: '1', state: 'Seen', date: '' }],
+  fixed(1),
+).score;
+console.assert(allOverdue < allImminent, `Overdue (${allOverdue}) should score lower than imminent (${allImminent})`);
+console.log('   ✓ Passed\n');
+
+// Test 31: scorePipelineHealth excludes Won items (blocked state)
+console.log('31. scorePipelineHealth excludes Won items');
+const t31 = scorePipelineHealth(
+  [{ id: '1', state: 'Won', date: '' }],
+  fixed(-5),
+);
+console.assert(t31.score === 100, `Won item should not drag down score, got ${t31.score}`);
+console.assert(t31.breakdown.total === 0, 'Won item should not count toward total');
+console.log('   ✓ Passed\n');
+
+// Test 32: scorePipelineHealth handles bad input without throwing
+console.log('32. scorePipelineHealth handles bad input without throwing');
+const t32a = scorePipelineHealth(null, fixed(0));
+const t32b = scorePipelineHealth([], 'not-a-function');
+console.assert(t32a.score === 0 && t32a.breakdown.total === 0, 'null items should return score 0');
+console.assert(t32b.score === 0 && t32b.breakdown.total === 0, 'non-function daysFromToday should return score 0');
+console.log('   ✓ Passed\n');
+
+// Test 33: scorePipelineHealth skips null/non-object items and items with non-finite days
+console.log('33. scorePipelineHealth skips malformed items and non-finite date results');
+const t33 = scorePipelineHealth(
+  [null, 42, { id: '1', state: 'Seen', date: '' }],
+  fixed(10),
+);
+console.assert(t33.breakdown.total === 1, `Should count only the valid item, got ${t33.breakdown.total}`);
+const t33b = scorePipelineHealth(
+  [{ id: '1', state: 'Seen', date: 'bogus' }],
+  () => NaN,
+);
+console.assert(t33b.breakdown.total === 1, 'Item with NaN days counted in total');
+console.assert(t33b.breakdown.overdue === 0, 'NaN days should not count as overdue');
+console.assert(t33b.score === 100, 'Unknown date incurs no penalty');
 console.log('   ✓ Passed\n');
 
 console.log('✅ All tests passed');

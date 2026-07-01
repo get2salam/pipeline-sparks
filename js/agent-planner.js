@@ -186,3 +186,46 @@ export function summarizePlannerSuggestions(suggestions) {
   }
   return lines.join('\n');
 }
+
+/**
+ * Compute a 0–100 health score for active pipeline items in a single O(n) pass.
+ * Use this when only a summary indicator (dashboard badge, status chip) is needed
+ * and re-running the full planNextActions would be wasteful.
+ *
+ * Items in blockedStates are excluded — they are intentionally done.
+ * Items whose daysFromToday returns a non-finite value are counted toward the
+ * active total but not toward overdue or imminent (unknown date = no penalty).
+ *
+ * Score drops when active items have overdue or imminent touch dates.
+ * Overdue items are weighted twice as heavily as imminent ones.
+ * A pipeline with no active items scores 100 (nothing at risk).
+ *
+ * @param {Array}    items          Normalized pipeline items.
+ * @param {Function} daysFromToday  (dateStr) => number — injected for testability.
+ * @returns {{ score: number, breakdown: { total: number, overdue: number, imminent: number } }}
+ */
+export function scorePipelineHealth(items, daysFromToday) {
+  if (!Array.isArray(items) || typeof daysFromToday !== 'function') {
+    return { score: 0, breakdown: { total: 0, overdue: 0, imminent: 0 } };
+  }
+  const blocked = GUARDRAILS.blockedStates;
+  let total = 0;
+  let overdue = 0;
+  let imminent = 0;
+
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    if (blocked.has(item.state)) continue;
+    total++;
+    const daysDue = daysFromToday(item.date);
+    if (typeof daysDue !== 'number' || !Number.isFinite(daysDue)) continue;
+    if (daysDue < 0) overdue++;
+    else if (daysDue <= 2) imminent++;
+  }
+
+  if (total === 0) return { score: 100, breakdown: { total: 0, overdue: 0, imminent: 0 } };
+
+  const urgencyWeight = (overdue * 2 + imminent) / (total * 2);
+  const score = Math.round(Math.max(0, Math.min(100, (1 - urgencyWeight) * 100)));
+  return { score, breakdown: { total, overdue, imminent } };
+}

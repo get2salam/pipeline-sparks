@@ -271,4 +271,28 @@ console.assert(
 );
 console.log('   ✓ Passed\n');
 
+// Test 25: two actions with null itemId are NOT flagged as duplicates of each other
+console.log('25. Two malformed actions with null itemId are not cross-flagged as duplicates');
+const test25 = auditAgentExecution([
+  { ...validAction, itemId: null, title: 'First nullId' },
+  { ...validAction, itemId: null, title: 'Second nullId' },
+]);
+const test25DupIssues = test25.batchIssues.filter((i) => i.includes('Duplicate'));
+console.assert(test25DupIssues.length === 0, `Null-itemId actions should not produce duplicate warnings, got: ${JSON.stringify(test25DupIssues)}`);
+// Both should still fail itemRef validation independently
+console.assert(test25.actionResults.every((r) => r.valid === false), 'Both should still fail itemRef validation');
+console.log('   ✓ Passed\n');
+
+// Test 26: genuine duplicates (valid, same non-null itemId + actionId) are still detected
+console.log('26. Genuine duplicate (same non-null itemId + actionId) is still flagged');
+const test26 = auditAgentExecution([
+  { ...validAction, itemId: 'opp-real' },
+  { ...validAction, itemId: 'opp-real' },
+]);
+console.assert(
+  test26.batchIssues.some((i) => i.includes('Duplicate') && i.includes('opp-real')),
+  'Real duplicate should still be flagged',
+);
+console.log('   ✓ Passed\n');
+
 console.log('✅ All tests passed');

@@ -97,6 +97,7 @@ export function auditAgentExecution(actions, items = []) {
   const actionIds = new Set();
   for (const a of actions) {
     if (a == null || typeof a !== 'object') continue;
+    if (a.itemId == null || !a.actionId) continue; // malformed — itemRef rule will flag independently
     const key = `${a.itemId}-${a.actionId}`;
     if (actionIds.has(key)) {
       batchIssues.push(`Duplicate action: ${a.actionId} on item ${a.itemId}`);
