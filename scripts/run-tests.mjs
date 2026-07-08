@@ -19,6 +19,7 @@ import { pathToFileURL } from 'node:url';
 const DEFAULT_TESTS = [
   'js/agent-audit.test.js',
   'js/agent-planner.test.js',
+  'js/snapshot-schema.test.js',
 ];
 
 const args = process.argv.slice(2);

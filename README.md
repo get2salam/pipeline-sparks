@@ -35,13 +35,17 @@ Then open <http://localhost:8000>.
 
 ## Running the agent tests
 
-The pipeline agent logic in `js/agent-audit.js` and `js/agent-planner.js` is covered by Node-based assertion suites in `js/*.test.js`. Run them with:
+The pipeline agent logic in `js/agent-audit.js` and `js/agent-planner.js`, plus the backup/import guardrails in `js/snapshot-schema.js`, are covered by Node-based assertion suites in `js/*.test.js`. Run them with:
 
 ```bash
 npm test
 ```
 
-The runner in `scripts/run-tests.mjs` patches `console.assert` so failed assertions exit with a non-zero status, which makes the suite safe to wire into CI. Individual suites are available via `npm run test:audit` and `npm run test:planner`.
+The runner in `scripts/run-tests.mjs` patches `console.assert` so failed assertions exit with a non-zero status, which makes the suite safe to wire into CI. Individual suites are available via `npm run test:audit`, `npm run test:planner`, and `npm run test:schema`.
+
+### Import hardening
+
+`js/snapshot-schema.js` is the parsing boundary for JSON backups, whether restored from `localStorage` or picked via **Import**. It rejects malformed shapes (non-object roots, non-array `items`, wrong-typed fields) and caps both the number of items (`MAX_IMPORT_ITEMS`) and the length of free-text fields (`MAX_TEXT_LENGTH`), so a corrupted or oversized backup fails with a clear error instead of bloating `localStorage` or freezing the board. `js/main.js` also rejects an import file outright if it exceeds `MAX_IMPORT_FILE_BYTES` before ever reading its contents.
 
 The same `npm test` command runs in CI via [`.github/workflows/tests.yml`](.github/workflows/tests.yml) on every push and pull request to `main`, against Node 20 and Node 22.
 

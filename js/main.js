@@ -1,4 +1,5 @@
 import { planNextActions } from './agent-planner.js';
+import { safeParseSnapshot, MAX_IMPORT_FILE_BYTES } from './snapshot-schema.js';
 
 const SPEC = {
   "slug": "pipeline-sparks",
@@ -297,33 +298,6 @@ function seedState() {
   };
 }
 
-function safeParseSnapshot(raw) {
-  const parsed = JSON.parse(raw);
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Backup must be a JSON object.');
-  }
-  if (parsed.items !== undefined) {
-    if (!Array.isArray(parsed.items)) {
-      throw new Error('Backup items must be an array.');
-    }
-    parsed.items.forEach((entry, index) => {
-      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-        throw new Error(`Backup item at position ${index} must be an object.`);
-      }
-    });
-  }
-  for (const field of ['boardTitle', 'boardSubtitle']) {
-    if (parsed[field] !== undefined && typeof parsed[field] !== 'string') {
-      throw new Error(`Backup ${field} must be a string.`);
-    }
-  }
-  const { ui } = parsed;
-  if (ui !== undefined && (ui === null || typeof ui !== 'object' || Array.isArray(ui))) {
-    throw new Error('Backup ui must be an object.');
-  }
-  return parsed;
-}
-
 function hydrate() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -434,6 +408,9 @@ function exportState() {
 }
 
 async function importState(file) {
+  if (file.size > MAX_IMPORT_FILE_BYTES) {
+    throw new Error(`File is too large to import (max ${Math.round(MAX_IMPORT_FILE_BYTES / (1024 * 1024))}MB).`);
+  }
   const raw = await file.text();
   const parsed = safeParseSnapshot(raw);
   commit({
